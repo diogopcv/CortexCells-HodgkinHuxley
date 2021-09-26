@@ -1,0 +1,50 @@
+function [f] = funcao(vars,inj)
+compa = 2e-3;
+diama = 2e-3;
+area = pi*compa*diama;
+vna = 45; %potencial sodio em mV
+vk = -90; %potencial potassio em mV
+vvaz = -60; %potencial vazamento em mV
+cm = 7.36*area; %capacitancia especifica em uF/cm2
+vca = 150; %potencial Ca em mV
+gnamax = 231.1475*area; %maxima condutancia especifica sodio em mS/cm^2
+gkmax = 45*area; %maxima condutancia especifica potassio em mS/cm^2
+gcamax = 1*area;%maxima condutancia especifica ca em mS/cm^2
+gadmax = 10*area; %maxima condutancia especifica K-adaptativo em mS/cm^2
+gnapmax = 1*area; %maxima condutancia especifica Nap em mS/cm^2
+gvaz = 0.237*area; %condutancia vazamento em mS/cm^2
+B = 10; % contsante covers�o Ica->[Ca] Molar/nC
+tau = 50; % contsante de tempo [Ca] ms
+Ca_base = 5e-5; % concentra��o base de Ca Molar
+%------------------------------------------------------------------------
+compd = 5e-3;
+diamd = 4e-4;
+aread = pi*compd*diamd;
+cmd = 7.36*aread;
+cond2 = (2.273*pi*diamd^2)/(4*compd);
+gvazd = 0.237*aread;
+%-------------------------------------------------------------------------
+taxa(1,1:12) = alfabetae(vars(1),vars(7));
+Ik = gkmax*((vars(2))^2)*(vars(1) - vk);
+Ina = gnamax*((vars(3))^2)*(vars(4))*(vars(1) - vna);
+Inap = gnapmax*((vars(5))^2)*(vars(1) - vna);
+Ica = gcamax*((vars(6))^2)*(vars(1) - vca);
+Iad = gadmax*((vars(8))^2)*(vars(1) - vk); 
+Ivaz = gvaz*(vars(1) - vvaz);
+I2s = cond2*(vars(1) - vars(10));
+I3s = cond2*(vars(1) - vars(11));
+
+f1 = (-(Ik + Ina + Inap + Ica + Iad + I2s + I3s + Ivaz) +inj)/(cm);
+f2 = taxa(2)/taxa(1) - vars(2)/taxa(1);
+f3 = taxa(4)/taxa(3) - vars(3)/taxa(3);
+f4 = taxa(6)/taxa(5) - vars(4)/taxa(5);
+f5 = taxa(8)/taxa(7) - vars(5)/taxa(7);
+f6 = taxa(10)/taxa(9) - vars(6)/taxa(9);
+f7 = -B*Ica - (vars(7) - Ca_base)/tau;
+f8 = taxa(12)/taxa(11) - vars(8)/taxa(11);
+f9 = -(gvazd*(vars(9)-vvaz) + cond2*(vars(9)-vars(10)))/(cmd);
+f10 = -(gvazd*(vars(10)-vvaz) + cond2*(vars(10)-vars(9)) + cond2*(vars(10)-vars(1)))/(cmd);
+f11 = -(gvazd*(vars(11)-vvaz) + cond2*(vars(11)-vars(12)) + cond2*(vars(11)-vars(1)))/(cmd);
+f12 = -(gvazd*(vars(12)-vvaz) + cond2*(vars(12)-vars(11)))/(cmd);
+
+f = [f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12]';
